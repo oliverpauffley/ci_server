@@ -9,6 +9,8 @@ version:        0.0.0
 build-type:     Simple
 
 library
+  exposed-modules:
+      Core
   other-modules:
       Paths_quad
   autogen-modules:
