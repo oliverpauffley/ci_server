@@ -1,0 +1,7 @@
+resolver: lts-20.00
+packages: [.]
+nix:
+  enable: true
+  packages: [zlib.dev, zlib.out, pkg-config]
+extra-deps:
+  - butcher-1.3.3.2@sha256:9513d3bba9c58a43199c43d856dd3901d374117406fb438786dddef6ad8639b1,3301
