@@ -9,7 +9,6 @@ default-extensions:
   - OverloadedStrings
   - StrictData
   - RebindableSyntax
-  - OverloadedRecordDot
 
 dependencies:
   - aeson
@@ -30,6 +29,8 @@ dependencies:
   - typed-process
   - wai-cors
   - yaml
+ghc-options:
+  - -F -pgmF=record-dot-preprocessor
 
 library:
   source-dirs: src

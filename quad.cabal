@@ -11,6 +11,8 @@ build-type:     Simple
 library
   exposed-modules:
       Core
+      Docker
+      Socket
   other-modules:
       Paths_quad
   autogen-modules:
@@ -26,7 +28,7 @@ library
       OverloadedStrings
       StrictData
       RebindableSyntax
-      OverloadedRecordDot
+  ghc-options: -F -pgmF=record-dot-preprocessor
   build-depends:
       aeson
     , async
@@ -65,8 +67,7 @@ executable quad
       OverloadedStrings
       StrictData
       RebindableSyntax
-      OverloadedRecordDot
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -F -pgmF=record-dot-preprocessor -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , async
@@ -107,8 +108,7 @@ test-suite quad-test
       OverloadedStrings
       StrictData
       RebindableSyntax
-      OverloadedRecordDot
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -F -pgmF=record-dot-preprocessor -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , async
