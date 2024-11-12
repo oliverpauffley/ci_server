@@ -1,0 +1,3 @@
+#+title: Haskell CI Server
+
+A Haskell Continous Integration Server. Inspired by Drone. Following the Simple Haskell Handbook
