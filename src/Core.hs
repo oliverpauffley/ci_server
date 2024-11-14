@@ -1,5 +1,6 @@
 module Core where
 
+import qualified Data.Aeson            as Aeson
 import qualified Data.Time.Clock.POSIX as Time
 import qualified Docker
 import           GHC.Records           (getField)
@@ -12,7 +13,7 @@ import qualified RIO.Text              as Text
 
 data Pipeline
   = Pipeline { steps :: NonEmpty Step }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Aeson.FromJSON)
 
 data Step =
   Step
@@ -20,7 +21,7 @@ data Step =
   , commands :: NonEmpty Text
   , image    :: Docker.Image
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Aeson.FromJSON)
 
 data Build =
   Build
@@ -68,7 +69,7 @@ data BuildResult
   deriving (Eq, Show)
 
 newtype StepName = StepName Text
-  deriving (Eq, Show, Ord)
+  deriving (Eq, Show, Ord, Generic, Aeson.FromJSON)
 
 type LogCollection = Map StepName CollectionStatus
 
