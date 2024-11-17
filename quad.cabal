@@ -10,9 +10,12 @@ build-type:     Simple
 
 library
   exposed-modules:
+      Agent
       Core
       Docker
+      JobHandler
       Runner
+      Server
       Socket
   other-modules:
       Paths_quad

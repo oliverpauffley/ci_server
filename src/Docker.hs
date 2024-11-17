@@ -1,5 +1,6 @@
 module Docker where
 
+import qualified Codec.Serialise       as Serialise
 import           Data.Aeson            ((.:))
 import qualified Data.Aeson            as Aeson
 import qualified Data.Aeson.Types      as Aeson.Types
@@ -18,11 +19,11 @@ data CreateContainerOptions
         }
 
 newtype ContainerId = ContainerId Text
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Serialise.Serialise)
 
 
 data Image = Image { name :: Text, tag :: Text }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Serialise.Serialise)
 
 instance Aeson.FromJSON Image where
   parseJSON = Aeson.withText "parse-image" $ \image -> do
@@ -41,10 +42,10 @@ data ContainerStatus
   deriving (Eq, Show)
 
 newtype ContainerExitCode = ContainerExitCode Int
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Serialise.Serialise)
 
 data Volume = Volume Text
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Serialise.Serialise)
 
 data FetchLogsOptions
   = FetchLogsOptions
