@@ -1,5 +1,6 @@
 module JobHandler where
 
+import           Agent
 import           Core
 import           RIO
 
@@ -14,8 +15,9 @@ data JobState =
   JobQueued | JobAssigned | JobScheduled Build
   deriving (Eq, Show)
 
-data Service =
-  { queueJob :: Pipeline -> IO BuildNumber
+data Service = Service
+  { queueJob    :: Pipeline -> IO BuildNumber
   , dispatchCmd :: IO (Maybe Agent.Cmd)
-  , ProcessMsg :: Agent.Msg -> IO ()
+  , processMsg  :: Agent.Msg -> IO ()
+  , findJob     :: BuildNumber -> IO (Maybe Job)
   }

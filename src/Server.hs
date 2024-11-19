@@ -19,8 +19,7 @@ run config handler =
     Scotty.post "/agent/pull" do
       cmd <- Scotty.liftAndCatchIO do
         handler.dispatchCmd
-
-        Scotty.raw $ Serialise.serialise cmd
+      Scotty.raw $ Serialise.serialise cmd
     Scotty.post "/agent/send" do
       msg <- Serialise.deserialise <$> Scotty.body
 
