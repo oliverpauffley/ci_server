@@ -4,13 +4,16 @@ import           Agent
 import qualified Control.Concurrent.Async as Async
 import           Core
 import qualified Data.Aeson               as Aeson
+import qualified Data.Aeson.KeyMap        as Aeson.KeyMap
 import qualified Data.Yaml                as Yaml
 import qualified Docker
 import           JobHandler
+import qualified JobHandler
 import           JobHandler.Memory
 import qualified Network.HTTP.Simple      as HTTP
 import           RIO
 import qualified RIO.ByteString           as ByteString
+import qualified RIO.HashMap              as HashMap
 import qualified RIO.Map                  as Map
 import qualified RIO.NonEmpty.Partial     as P
 import qualified RIO.Set                  as Set
@@ -116,7 +119,16 @@ testServerAndAgent =
   runServerAndAgent $ \handler -> do
     let pipeline = makePipeline [ makeStep "agent-test" "busybox" ["echo hello", "echo from agent"]]
 
-    number <- handler.queueJob pipeline
+    let info =
+          JobHandler.CommitInfo
+            { sha = "00000"
+            , branch = "master"
+            , message = "test commit"
+            , author = "quad"
+            , repo= "quad-ci/quad"
+            }
+
+    number <- handler.queueJob info pipeline
     checkBuild handler number
     pure ()
 
@@ -163,8 +175,8 @@ testWebhookTrigger =
 
     res <- HTTP.httpBS req
 
-    let Right (Aeson.Object build) = Aeson.eitherDecodeStrict $ HTTP.getResponseBody res
-    let Just (Aeson.Number number) = hashMap.lookup "number" build
+    let Right (Aeson.Object build) = traceShow res Aeson.eitherDecodeStrict $ HTTP.getResponseBody res
+    let Just (Aeson.Number number) = Aeson.KeyMap.lookup "number" build
 
 
     checkBuild handler $ Core.BuildNumber (round number)

@@ -1,7 +1,7 @@
 {
-    "ref": "refs/head/master",
+    "ref": "refs/heads/master",
     "repository": {
-        "id": 32260997,
+        "id": 322600997,
         "name": "quad-sample-pipeline",
         "full_name": "alpacaaa/quad-sample-pipeline"
     },

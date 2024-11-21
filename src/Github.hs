@@ -13,18 +13,25 @@ import qualified Docker
 import qualified JobHandler
 import qualified Network.HTTP.Simple  as HTTP
 import qualified RIO.NonEmpty.Partial as NonEmpty.Partial
+import qualified RIO.Text             as Text
 
 
 parsePushEvent :: ByteString -> IO JobHandler.CommitInfo
 parsePushEvent body = do
   let parser = Aeson.withObject "github-webhook" $ \event -> do
+        branch <- event .: "ref" <&> \ref -> Text.dropPrefix "refs/head/" ref
         commit <- event .: "head_commit"
         sha <- commit .: "id"
         repo <- event .: "repository" >>= \r -> r .: "full_name"
+        message <- commit .: "message"
+        author <- commit .: "author" >>= \a -> a .: "username"
 
         pure JobHandler.CommitInfo
           { sha = sha
           , repo = repo
+          , branch = branch
+          , message = message
+          , author = author
           }
 
   let result = do
@@ -39,9 +46,10 @@ parsePushEvent body = do
 fetchRemotePipeline :: JobHandler.CommitInfo -> IO Pipeline
 fetchRemotePipeline info = do
   endpoint <- HTTP.parseRequest "https://api.github.com"
-  let path = "/repos" <> info.repo <> "/contents/.quad.yml"
+  let path = "/repos/" <> info.repo <> "/contents/.quad.yml"
 
-  let req = endpoint
+  let req =
+        endpoint
           & HTTP.setRequestPath (encodeUtf8 path)
           & HTTP.addToRequestQueryString [("ref", Just $ encodeUtf8 info.sha)]
           & HTTP.addRequestHeader "User-Agent" "quad-ci"
