@@ -3,10 +3,12 @@ module Main where
 import           Agent
 import qualified Control.Concurrent.Async as Async
 import           Core
+import qualified Data.Aeson               as Aeson
 import qualified Data.Yaml                as Yaml
 import qualified Docker
 import           JobHandler
 import           JobHandler.Memory
+import qualified Network.HTTP.Simple      as HTTP
 import           RIO
 import qualified RIO.ByteString           as ByteString
 import qualified RIO.Map                  as Map
@@ -110,7 +112,16 @@ testYamlDecoding runner = do
   result.state `shouldBe` BuildFinished BuildSucceeded
 
 testServerAndAgent :: Runner.Service -> IO ()
-testServerAndAgent runner = do
+testServerAndAgent =
+  runServerAndAgent $ \handler -> do
+    let pipeline = makePipeline [ makeStep "agent-test" "busybox" ["echo hello", "echo from agent"]]
+
+    number <- handler.queueJob pipeline
+    checkBuild handler number
+    pure ()
+
+runServerAndAgent :: (JobHandler.Service -> IO()) -> Runner.Service -> IO ()
+runServerAndAgent callback runner = do
   handler <- JobHandler.Memory.createService
 
   serverThread <- Async.async do
@@ -122,16 +133,10 @@ testServerAndAgent runner = do
     Agent.run (Agent.Config "http://localhost:9000") runner
 
   Async.link agentThread
-
-  let pipeline = makePipeline [ makeStep "agent-test" "busybox" ["echo hello", "echo from agent"]]
-
-  number <- handler.queueJob pipeline
-  checkBuild handler number
+  callback handler
 
   Async.cancel serverThread
   Async.cancel agentThread
-
-  pure ()
 
 checkBuild :: JobHandler.Service -> BuildNumber -> IO ()
 checkBuild handler number = loop
@@ -144,6 +149,26 @@ checkBuild handler number = loop
             BuildFinished s -> s `shouldBe` BuildSucceeded
             _               -> loop
         _ -> loop
+
+testWebhookTrigger :: Runner.Service -> IO ()
+testWebhookTrigger =
+  runServerAndAgent $ \handler -> do
+    base <- HTTP.parseRequest "http://localhost:9000"
+
+    let req =
+          base
+            & HTTP.setRequestMethod "POST"
+            & HTTP.setRequestPath "/webhook/github"
+            & HTTP.setRequestBodyFile "test/github-payload.sample.json"
+
+    res <- HTTP.httpBS req
+
+    let Right (Aeson.Object build) = Aeson.eitherDecodeStrict $ HTTP.getResponseBody res
+    let Just (Aeson.Number number) = hashMap.lookup "number" build
+
+
+    checkBuild handler $ Core.BuildNumber (round number)
+
 
 
 main :: IO ()
@@ -165,6 +190,8 @@ main = hspec do
       testYamlDecoding runner
     it "should run server and agent" do
       testServerAndAgent runner
+    it "should process webhooks" do
+      testWebhookTrigger runner
 
 cleanupDocker :: IO ()
 cleanupDocker = void do
